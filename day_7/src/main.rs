@@ -11,10 +11,10 @@ enum HandScore {
     HighCard,
 }
 
-static ORDER: &'static [char] = &['A', 'K', 'Q', 'J', 'T', '9','8', '7', '6', '5', '4', '3', '2'];
+static ORDER: &'static [char] = &['A', 'K', 'Q',  'T', '9','8', '7', '6', '5', '4', '3', '2', 'J'];
 
 
-#[derive(Debug)]
+#[derive(Debug, Ord)]
 struct Hand {
     cards: String,
     bid: u32,
@@ -30,31 +30,73 @@ impl Hand {
         }
         
         let mut score =HandScore::HighCard;
-        let mut score_vec: Vec<i32> = cards_count.into_iter().map(|(k, v)| v).collect();
+        let mut score_vec: Vec<&i32> = cards_count.iter().filter(|(k, v)| **k != 'J').map(|(k, v)| v).collect();
+
         score_vec.sort();
         score_vec.reverse();
-        for v in score_vec.into_iter() {
-            if v == 5 {
+
+        let j_count = cards_count.get(&'J').unwrap_or(&0);
+        for v in score_vec.into_iter(){
+            if *v == 5 {
                 score = HandScore::FiveOfKind;
                 break;
-            } else if v == 4 {
+            } else if *v == 4 {
                 score = HandScore::FourOfKind;
                 break;
-            } else if v == 3{
+            } else if *v == 3 {
                 score = HandScore::ThreeOfKind;
-            } else if score == HandScore::ThreeOfKind && v == 2{
+            } else if score == HandScore::ThreeOfKind && *v == 2 {
                 score = HandScore::FullHouse;
                 break;
-            } else if score == HandScore::OnePair && v == 3 {
+            } else if score == HandScore::OnePair && *v == 3 {
                 score = HandScore::FullHouse;
                 break;
-            } else if v == 2 && score == HandScore::OnePair {
+            } else if *v == 2 && score == HandScore::OnePair {
                 score = HandScore::TwoPair;
                 break;
-            }  else if v == 2 {
+            }  else if *v == 2 {
                 score = HandScore::OnePair;
             }
         }
+
+        if score == HandScore::FourOfKind && *j_count > 0{
+            score = HandScore::FiveOfKind;
+        } else if score == HandScore::ThreeOfKind {
+            if *j_count == 1 {
+                score = HandScore::FourOfKind;
+            } else if  *j_count == 2 {
+               score = HandScore::FiveOfKind; 
+            }
+        } else if score == HandScore::TwoPair {
+            if *j_count == 1 {
+                score = HandScore::FullHouse;
+            } 
+        } else if score == HandScore::OnePair {
+            if * j_count == 1 {
+                score = HandScore::ThreeOfKind;
+            }
+            else if *j_count == 2 {
+                score = HandScore::FourOfKind;
+            } else if *j_count == 3 {
+                score = HandScore::FiveOfKind;
+            }
+        } else if score == HandScore::HighCard {
+            if *j_count == 1 {
+                score = HandScore::OnePair;
+            } else if *j_count == 2 {
+                score = HandScore::ThreeOfKind;
+            } else if *j_count == 3 {
+                score = HandScore::FourOfKind;
+            }
+            else if *j_count ==4 {
+                score = HandScore::FiveOfKind;
+            }
+        }
+
+        if *j_count == 5 || *j_count == 4{
+            score = HandScore::FiveOfKind;
+        } 
+         
 
         return Hand { cards: cards, bid: bid, score: score };
 
@@ -66,7 +108,9 @@ impl PartialEq for Hand {
         self.cards == other.cards
     }
 }
-
+//score=249506014 too low
+//score=249722254 too high
+// score=249620106
 impl PartialOrd for Hand {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         if self.score == other.score {
@@ -101,38 +145,6 @@ impl PartialOrd for Hand {
 
 impl Eq for Hand {}
 
-impl Ord for Hand {
-    fn cmp(&self, other: &Self) -> Ordering {
-
-        println!("Eq score {} {}", self.cards, other.cards);
-        if self.score == other.score {
-
-            println!("Eq score {} {}", self.cards, other.cards);
-            if self.eq(other) {
-                return Ordering::Equal;
-            } else {
-                println!("Compering chars {} {}", self.cards, other.cards);
-                for (a, b) in self.cards.chars().into_iter().zip(other.cards.chars().into_iter()).into_iter() {
-                    let a_idx = ORDER.into_iter().position(|x| *x == a).unwrap();
-                    let b_idx = ORDER.into_iter().position(|x| *x == b).unwrap();
-
-                    if a_idx < b_idx {
-                        return Ordering::Greater;
-                    } else if a_idx > b_idx {
-                        return Ordering::Less;
-                    }
-                }
-                return Ordering::Equal;
-            }
-        } else {
-            if self.score > other.score {
-                return Ordering::Greater;
-            } else {
-               return Ordering::Less;
-            }
-        }    
-    }
-}
 fn main() {
 
     let content = fs::read_to_string("data/input2.txt").expect("File not found");
@@ -159,7 +171,9 @@ fn main() {
         score = score + (hand.bid as u64 * rank);
         rank -= 1;
     }
-    println!("{:?}", hands);
+    for hand in hands.iter() {
+        println!("{:?}", hand);
+    }
     print!("score={score}\n");
 
 }
