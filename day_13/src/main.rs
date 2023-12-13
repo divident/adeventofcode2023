@@ -1,5 +1,4 @@
-use std::{collections::hash_map::DefaultHasher, fs};
-use std::hash::{Hash, Hasher};
+use std::fs;
 
 fn check(grid: &Vec<Vec<char>>) -> usize{
     let n = grid.len();
@@ -25,8 +24,6 @@ fn check(grid: &Vec<Vec<char>>) -> usize{
 
         right = &rright[..];
         
-        // println!("right={:?} left={:?}", right, left);
-
         if left != right {
             
             let mut jright: Vec<char> = Vec::new();
@@ -70,25 +67,10 @@ fn main() {
             grid.push(line.chars().collect());
         }
 
-        let mut hash_horizontal: Vec<u64> = Vec::new();
-        for line in grid.iter() {
-            let ver_line: String  =  line.iter().collect();
-
-            let mut hasher = DefaultHasher::new();
-            ver_line.hash(&mut hasher);
-            let hash_val = hasher.finish();
-            hash_horizontal.push(hash_val);
-        }
-
         let n = grid.len();
         let m = grid[0].len();
 
         let mut rgrid: Vec<Vec<char>> = Vec::new();
-
-        // println!("grid");
-        // for line in grid.iter() {
-        //     println!("{:?}", line);
-        // }
 
         for i in 0..m {
             let mut line: Vec<char> = Vec::new();
@@ -98,13 +80,6 @@ fn main() {
             let s: Vec<char> = line.into_iter().collect();
             rgrid.push(s);
         }
-
-        // println!("rgrid");
-        // for line in rgrid.iter() {
-        //     println!("{:?}", line);
-        // }
-
-
 
         let rm = check(&grid);
         if  rm != 0 {
