@@ -51,8 +51,6 @@ def main():
     n, m = len(lines), len(lines[0]) 
     max_ans = 0
 
-    max_ans = max(max_ans, walk((10, 109), Direction.W, lines))
-
     max_ans = max(max_ans, walk((0, 0), Direction.E, lines))
     max_ans = max(max_ans, walk((0, 0), Direction.S, lines))
 
@@ -87,7 +85,7 @@ def walk(s, dir, lines):
     ndir = new_dir(dir, lines[ny][nx])
     if isinstance(ndir, tuple):
         q.append((nx, ny, ndir[0]))
-        # q.append((nx, ny, ndir[1]))
+        q.append((nx, ny, ndir[1]))
     else:
         q.append((nx, ny, ndir))
 
@@ -120,7 +118,7 @@ def walk(s, dir, lines):
                 if (nx, ny, ndir) not in visited:
                     q.append((nx, ny, ndir))
                 
-    ans = len(set([(x, y) for x, y, dir in visited]))
+    ans = len(set([(x, y) for x, y, _ in visited]))
     #print(f"{ans=} {s=}")
     return ans
 
